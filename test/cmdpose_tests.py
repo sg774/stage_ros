@@ -38,7 +38,7 @@ import threading
 import time
 import unittest
 
-from geometry_msgs.msg import Pose, PoseStamped, Twist
+from geometry_msgs.msg import Pose, PoseStamped, Twist, Pose2D
 from nav_msgs.msg import Odometry
 import rospy
 import rostest

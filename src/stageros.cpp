@@ -50,6 +50,7 @@
 #include <rosgraph_msgs/Clock.h>
 
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Pose2D.h>
 #include <geometry_msgs/PoseStamped.h>
 #include "tf/LinearMath/Transform.h"
 #include <std_srvs/Empty.h>
@@ -170,6 +171,7 @@ public:
 
     // Message callback for a cmd_pose message, which sets positions.
     void poseReceived(int idx, const boost::shared_ptr<geometry_msgs::Pose const>& msg);
+    //void poseReceived(int idx, const boost::shared_ptr<geometry_msgs::Pose2D const>& msg);
 
     // Message callback for a cmd_pose_stamped message, which sets positions
     // with a timestamp (e.g., from rviz).
@@ -281,6 +283,7 @@ StageNode::cmdvelReceived(int idx, const boost::shared_ptr<geometry_msgs::Twist 
 
 void
 StageNode::poseReceived(int idx, const boost::shared_ptr<geometry_msgs::Pose const>& msg)
+//StageNode::poseReceived(int idx, const boost::shared_ptr<geometry_msgs::Pose2D const>& msg)
 {
     boost::mutex::scoped_lock lock(msg_lock);
     Stg::Pose pose;
@@ -289,9 +292,12 @@ StageNode::poseReceived(int idx, const boost::shared_ptr<geometry_msgs::Pose con
     tf::Matrix3x3 m(tf::Quaternion(msg->orientation.x,msg->orientation.y,msg->orientation.z,msg->orientation.w));
     m.getRPY(roll, pitch, yaw);
     pose.x = msg->position.x;
+    //pose.x = msg->x;
     pose.y = msg->position.y;
+    //pose.y = msg->y;
     pose.z = 0;
     pose.a = yaw;
+    //pose.a = msg->theta;
     this->positionmodels[idx]->SetPose(pose);
 }
 
@@ -306,6 +312,17 @@ StageNode::poseStampedReceived(int idx, const boost::shared_ptr<geometry_msgs::P
     *pose = msg->pose;
     boost::shared_ptr<geometry_msgs::Pose const> pose_ptr(pose);
     this->poseReceived(idx, pose_ptr);
+    //geometry_msgs::Pose2D* pose = new geometry_msgs::Pose2D;
+    //double roll,pitch,yaw;
+    //tf::Matrix3x3 m(tf::Quaternion(msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w));
+    //m.getRPY(roll,pitch,yaw);
+    //*pose = msg->pose;
+    //*pose->x = msg->pose.position.x;
+    //*pose->y = msg->pose.position.y;
+    //*pose->theta = yaw;
+
+    //boost::shared_ptr<geometry_msgs::Pose2D const> pose_ptr(pose);
+    //this->poseReceived(idx, pose_ptr);
 }
 
 StageNode::StageNode(int argc, char** argv, bool gui, const char* fname, bool use_model_names)
@@ -397,6 +414,7 @@ StageNode::SubscribeModels()
         new_robot->ground_truth_pub = n_.advertise<nav_msgs::Odometry>(mapName(BASE_POSE_GROUND_TRUTH, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10);
         new_robot->cmdvel_sub = n_.subscribe<geometry_msgs::Twist>(mapName(CMD_VEL, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10, boost::bind(&StageNode::cmdvelReceived, this, r, _1));
         new_robot->pose_sub = n_.subscribe<geometry_msgs::Pose>(mapName(POSE, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10, boost::bind(&StageNode::poseReceived, this, r, _1));
+        //new_robot->pose_sub = n_.subscribe<geometry_msgs::Pose2D>(mapName(POSE, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10, boost::bind(&StageNode::poseReceived, this, r, _1));
 
         new_robot->posestamped_sub = n_.subscribe<geometry_msgs::PoseStamped>(mapName(POSESTAMPED, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10, boost::bind(&StageNode::poseStampedReceived, this, r, _1));
 
